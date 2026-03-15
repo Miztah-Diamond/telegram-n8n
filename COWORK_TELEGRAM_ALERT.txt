@@ -1,0 +1,38 @@
+---
+STANDING INSTRUCTION: TELEGRAM ALERTS
+After EVERY completed task or when you
+need my help, run this command:
+
+node -e "
+const https = require('https');
+const data = JSON.stringify({
+  task: 'TASK_NAME_HERE',
+  status: 'STATUS_HERE',
+  message: 'MESSAGE_HERE',
+  time: new Date().toLocaleString()
+});
+const options = {
+  hostname: 'localhost',
+  port: 5678,
+  path: '/webhook/cowork-alert',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Content-Length': data.length
+  }
+};
+const req = require('http').request(options, r => {
+  console.log('Alert sent to Telegram â');
+});
+req.on('error', e => {
+  console.log('n8n not running â alert skipped');
+});
+req.write(data);
+req.end();
+"
+
+Replace TASK_NAME_HERE, STATUS_HERE,
+and MESSAGE_HERE with actual values.
+
+Run this after EVERY task. No exceptions.
+---
