@@ -49,6 +49,7 @@ async function main() {
   console.log('  Creating DawaHQ Cowork Alert Workflow');
   console.log('============================================\n');
 
+  // Define the workflow (no 'active' field - it's read-only in n8n API)
   const workflow = {
     name: 'DawaHQ Cowork Telegram Alerts',
     nodes: [
@@ -97,11 +98,11 @@ async function main() {
         ],
       },
     },
-    active: false,
     settings: {},
   };
 
   try {
+    // Step 1: Create the workflow
     console.log('1. Creating workflow...');
     const created = await apiRequest('POST', '/workflows', workflow);
 
@@ -116,17 +117,26 @@ async function main() {
 
     console.log(`   \u2705 Workflow created (ID: ${created.id})`);
 
+    // Step 2: Activate the workflow
     console.log('2. Activating workflow...');
-    const activated = await apiRequest('PATCH', `/workflows/${created.id}`, {
-      active: true,
-    });
+    const activated = await apiRequest('POST', `/workflows/${created.id}/activate`, {});
 
     if (activated && activated.active) {
       console.log('   \u2705 Workflow activated!');
     } else {
-      console.log('   \u26a0\ufe0f  Could not auto-activate. Please activate manually in the n8n UI.');
+      // Fallback: try PATCH method
+      const activated2 = await apiRequest('PATCH', `/workflows/${created.id}`, {
+        active: true,
+      });
+      if (activated2 && activated2.active) {
+        console.log('   \u2705 Workflow activated!');
+      } else {
+        console.log('   \u26a0\ufe0f  Could not auto-activate. Please activate manually in the n8n UI.');
+        console.log('      Go to Workflows \u2192 DawaHQ Cowork Telegram Alerts \u2192 Toggle Active');
+      }
     }
 
+    // Step 3: Print webhook URL
     const webhookUrl = `http://localhost:5678/webhook/cowork-alert`;
     console.log('\n============================================');
     console.log('  \u2705 SETUP COMPLETE!');
